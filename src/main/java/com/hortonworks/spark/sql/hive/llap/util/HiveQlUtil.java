@@ -31,6 +31,10 @@ import static java.lang.String.format;
 
 public class HiveQlUtil {
 
+  public static String withLimit(String query, int limit) {
+    return String.format("%s LIMIT %d", query, limit);
+  }
+
   public static String projections(String[] columns) {
     return "`" + String.join("` , `", columns) + "`";
   }

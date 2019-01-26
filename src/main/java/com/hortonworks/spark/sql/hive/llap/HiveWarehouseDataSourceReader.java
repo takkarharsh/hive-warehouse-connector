@@ -1,5 +1,6 @@
 package com.hortonworks.spark.sql.hive.llap;
 
+import com.hortonworks.spark.sql.hive.llap.pushdowns.PushDownUtil;
 import com.hortonworks.spark.sql.hive.llap.util.JobUtil;
 import com.hortonworks.spark.sql.hive.llap.util.SchemaUtil;
 import org.apache.hadoop.hive.llap.LlapBaseInputFormat;
@@ -17,6 +18,7 @@ import org.apache.hadoop.hive.llap.LlapInputSplit;
 import org.apache.hadoop.hive.llap.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Function1;
 import scala.Option;
 import scala.collection.Seq;
 
@@ -58,6 +60,14 @@ public class HiveWarehouseDataSourceReader
   // is never called, empty array should be returned for this case."
   Filter[] pushedFilters = new Filter[0];
 
+  List<Function1<String, String>> pushDowns = new ArrayList<>();
+
+  //Transformations are applied FIFO
+  //It is the responsibility of the injected optimizer rules to ensure correct ordering
+  public void addPushDown(Function1<String, String> pushDown) {
+    pushDowns.add(pushDown);
+  }
+
   //SessionConfigSupport options
   Map<String, String> options;
 
@@ -84,7 +94,11 @@ public class HiveWarehouseDataSourceReader
 
     Seq<Filter> filterSeq = asScalaBuffer(Arrays.asList(filters)).seq();
     String whereClause = buildWhereClause(baseSchema, filterSeq);
-    return selectProjectAliasFilter(selectCols, baseQuery, randomAlias(), whereClause);
+    String result = selectProjectAliasFilter(selectCols, baseQuery, randomAlias(), whereClause);
+    LOG.info("Query before limit pushdown: {}", result);
+    String queryWithLimitPushdown = PushDownUtil.pushDown(result, pushDowns);
+    LOG.info("Query after limit pushdown: {}", queryWithLimitPushdown);
+    return queryWithLimitPushdown;
   }
 
   private StatementType getQueryType() throws Exception {

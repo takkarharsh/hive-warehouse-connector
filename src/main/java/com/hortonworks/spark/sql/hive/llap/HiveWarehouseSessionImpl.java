@@ -17,6 +17,7 @@
 
 package com.hortonworks.spark.sql.hive.llap;
 
+import com.hortonworks.spark.sql.hive.llap.pushdowns.PushDownUtil;
 import com.hortonworks.spark.sql.hive.llap.util.HiveQlUtil;
 import com.hortonworks.spark.sql.hive.llap.util.TriFunction;
 import org.apache.spark.SparkConf;
@@ -51,6 +52,7 @@ public class HiveWarehouseSessionImpl implements com.hortonworks.hwc.HiveWarehou
     executeUpdate = (conn, database, sql) ->
       DefaultJDBCWrapper.executeUpdate(conn, database, sql);
     sessionState.session.listenerManager().register(new LlapQueryExecutionListener());
+    PushDownUtil.injectOptimizerPushdowns(sessionState.session);
   }
 
   public Dataset<Row> q(String sql) {
