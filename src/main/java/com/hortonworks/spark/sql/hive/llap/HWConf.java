@@ -42,7 +42,9 @@ public enum HWConf {
   LOAD_STAGING_DIR("load.staging.dir", warehouseKey("load.staging.dir"), "/tmp"),
   ARROW_ALLOCATOR_MAX("arrow.allocator.max", warehouseKey("arrow.allocator.max"), Long.MAX_VALUE),
   COUNT_TASKS("count.tasks", warehouseKey("count.tasks"), 100),
-  DISABLE_PRUNING_AND_PUSHDOWNS("disable.pruning.and.pushdowns", warehouseKey("disable.pruning.and.pushdowns"), false);
+  DISABLE_PRUNING_AND_PUSHDOWNS("disable.pruning.and.pushdowns", warehouseKey("disable.pruning.and.pushdowns"), false),
+  SMART_EXECUTION("smartExecution", warehouseKey("smartExecution"), "true"),
+  ;
 
   private HWConf(String simpleKey, String qualifiedKey, Object defaultValue) {
     this.simpleKey = simpleKey;

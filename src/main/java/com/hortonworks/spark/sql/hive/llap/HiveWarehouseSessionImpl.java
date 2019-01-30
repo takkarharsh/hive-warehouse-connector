@@ -18,10 +18,9 @@
 package com.hortonworks.spark.sql.hive.llap;
 
 import com.hortonworks.hwc.MergeBuilder;
-import com.hortonworks.spark.sql.hive.llap.util.FunctionWith4Args;
-import com.hortonworks.spark.sql.hive.llap.util.HiveQlUtil;
-import com.hortonworks.spark.sql.hive.llap.util.StreamingMetaCleaner;
-import com.hortonworks.spark.sql.hive.llap.util.TriFunction;
+import com.hortonworks.spark.sql.hive.llap.util.*;
+import com.hortonworks.spark.sql.hive.llap.util.QueryExecutionUtil.ExecutionMethod;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -35,6 +34,8 @@ import java.util.function.Supplier;
 
 import static com.hortonworks.spark.sql.hive.llap.HWConf.*;
 import static com.hortonworks.spark.sql.hive.llap.util.HiveQlUtil.useDatabase;
+import static com.hortonworks.spark.sql.hive.llap.util.QueryExecutionUtil.ExecutionMethod.*;
+import static com.hortonworks.spark.sql.hive.llap.util.QueryExecutionUtil.resolveExecutionMethod;
 
 public class HiveWarehouseSessionImpl extends com.hortonworks.hwc.HiveWarehouseSession {
   static String HIVE_WAREHOUSE_CONNECTOR_INTERNAL = HiveWarehouseSession.HIVE_WAREHOUSE_CONNECTOR;
@@ -65,11 +66,36 @@ public class HiveWarehouseSessionImpl extends com.hortonworks.hwc.HiveWarehouseS
   }
 
   public Dataset<Row> executeQuery(String sql) {
+    return executeQueryInternal(sql, null);
+  }
+
+  public Dataset<Row> executeQuery(String sql, boolean useSplitsEqualToSparkCores) {
+    return executeSmart(EXECUTE_QUERY_LLAP, sql, getCoresInSparkCluster());
+  }
+
+  public Dataset<Row> executeQuery(String sql, int numSplitsToDemand) {
+    return executeSmart(EXECUTE_QUERY_LLAP, sql, numSplitsToDemand);
+  }
+
+  private Dataset<Row> executeQueryInternal(String sql, Integer numSplitsToDemand) {
     DataFrameReader dfr = session().read().format(HIVE_WAREHOUSE_CONNECTOR_INTERNAL).option("query", sql);
     return dfr.load();
   }
 
   public Dataset<Row> execute(String sql) {
+    return executeSmart(EXECUTE_HIVE_JDBC, sql, null);
+  }
+
+  private Dataset<Row> executeSmart(ExecutionMethod current, String sql, Integer numSplitsToDemand) {
+    ExecutionMethod resolved = resolveExecutionMethod(
+        BooleanUtils.toBoolean(HWConf.SMART_EXECUTION.getString(sessionState)), current, sql);
+    if (EXECUTE_HIVE_JDBC.equals(resolved)) {
+      return executeInternal(sql);
+    }
+    return executeQueryInternal(sql, numSplitsToDemand);
+  }
+
+  private Dataset<Row> executeInternal(String sql) {
     try (Connection conn = getConnector.get()) {
       DriverResultSet drs = executeStmt.apply(conn, DEFAULT_DB.getString(sessionState), sql);
       return drs.asDataFrame(session());
