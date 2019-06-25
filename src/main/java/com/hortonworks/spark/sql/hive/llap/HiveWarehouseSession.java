@@ -54,4 +54,9 @@ public interface HiveWarehouseSession {
     void dropDatabase(String database, boolean ifExists, boolean cascade);
 
     void dropTable(String table, boolean ifExists, boolean purge);
+
+    /**
+     * Closes the HWC session. Session cannot be reused after being closed.
+     */
+    void close();
 }
