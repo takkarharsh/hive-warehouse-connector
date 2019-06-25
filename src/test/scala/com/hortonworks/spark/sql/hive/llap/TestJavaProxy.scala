@@ -45,6 +45,7 @@ class TestJavaProxy extends FunSuite {
     withSetUpAndTearDown(test, test.testQualifiedTable)
     withSetUpAndTearDown(test, test.testSetDatabase)
     withSetUpAndTearDown(test, test.testShowTable)
+    withSetUpAndTearDown(test, test.testNoOperationPermittedAfterSessionClose)
   }
 
   test("TestSecureHS2Url") {

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 public class JobUtil {
 
   private static Logger LOG = LoggerFactory.getLogger(JobUtil.class);
+  public static final String LLAP_HANDLE_ID = "handleid";
 
   public static JobConf createJobConf(Map<String, String> options, String queryString) {
     JobConf jobConf = new JobConf(SparkContext.getOrCreate().hadoopConfiguration());
@@ -36,6 +37,8 @@ public class JobUtil {
       options.put("handleid", handleId);
     }
     jobConf.set("llap.if.handleid", options.get("handleid"));
+    jobConf.set("llap.if.handleid", options.get(LLAP_HANDLE_ID));
+
     return jobConf;
   }
 

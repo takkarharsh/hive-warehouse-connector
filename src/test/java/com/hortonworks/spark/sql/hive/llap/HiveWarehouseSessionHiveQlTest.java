@@ -17,12 +17,15 @@
 
 package com.hortonworks.spark.sql.hive.llap;
 
+import java.util.concurrent.Callable;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import static com.hortonworks.spark.sql.hive.llap.HiveWarehouseBuilderTest.*;
 import static com.hortonworks.spark.sql.hive.llap.TestSecureHS2Url.TEST_HS2_URL;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 class HiveWarehouseSessionHiveQlTest extends SessionTestBase {
 
@@ -95,6 +98,56 @@ class HiveWarehouseSessionHiveQlTest extends SessionTestBase {
     @Test
     void testShowTable() {
         assertEquals(hive.showTables().count(), mockExecuteResultSize);
+    }
+
+    @Test
+    void testNoOperationPermittedAfterSessionClose() {
+        hive.close();
+        expectIllegalStateException(() -> hive.showDatabases());
+        expectIllegalStateException(() -> hive.showTables());
+        expectIllegalStateException(() -> hive.executeUpdate("insert overwrite table a select * from b"));
+        expectIllegalStateException(() -> hive.execute("select * from sky"));
+        expectIllegalStateException(() -> hive.executeQuery("select * from sky"));
+        expectIllegalStateException(() -> hive.describeTable("table1"));
+        expectIllegalStateException(() -> {
+            hive.setDatabase("blah");
+            return null;
+        });
+
+        expectIllegalStateException(() -> {
+            hive.createDatabase("blah", true);
+            return null;
+        });
+
+        expectIllegalStateException(() -> {
+            hive.dropDatabase("blah", true, true);
+            return null;
+        });
+        expectIllegalStateException(() -> {
+            hive.dropTable("blah", true, true);
+            return null;
+        });
+        expectIllegalStateException(() -> {
+             hive.createTable("a")
+                .column("a", "string").create();
+             return null;
+        });
+
+        // try closing again
+        expectIllegalStateException(() -> {
+            hive.close();
+            return null;
+        });
+    }
+
+    private void  expectIllegalStateException(Callable action) {
+        Exception exception = null;
+        try {
+            action.call();
+        } catch (Exception e) {
+            exception = e;
+        }
+        assertTrue(exception instanceof IllegalStateException);
     }
 
     @Test
