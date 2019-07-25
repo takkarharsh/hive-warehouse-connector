@@ -16,7 +16,7 @@ val hadoopVersion = sys.props.getOrElse("hadoop.version", "3.0.0")
 val hiveVersion = sys.props.getOrElse("hive.version", "3.0.0")
 val log4j2Version = sys.props.getOrElse("log4j2.version", "2.4.1")
 val tezVersion = sys.props.getOrElse("tez.version", "0.9.1")
-val thriftVersion = sys.props.getOrElse("thrift.version", "0.9.3")
+val thriftVersion = sys.props.getOrElse("thrift.version", "0.9.3-1")
 val repoUrl = sys.props.getOrElse("repourl", "https://repo1.maven.org/maven2/")
 
 spName := "hortonworks/hive-warehouse-connector"
@@ -229,7 +229,7 @@ libraryDependencies ++= Seq(
     .exclude("org.apache.calcite", "calcite-core")
 )
 excludeDependencies += "commons-cli" % "commons-cli"
-dependencyOverrides += "com.google.guava" % "guava" % "14.0.1"
+dependencyOverrides += "com.google.guava" % "guava" % "28.0-jre"
 dependencyOverrides += "commons-codec" % "commons-codec" % "1.10"
 dependencyOverrides += "commons-logging" % "commons-logging" % "1.2"
 dependencyOverrides += "io.netty" % "netty-all" % "4.1.17.Final"
