@@ -85,15 +85,6 @@ class TestJavaProxy extends FunSuite {
     withSetUpAndTearDown(test, test.testWithDifferentNumberOfColsInHiveAndDF)
   }
 
-  test("StreamingRecordFormatterTest") {
-    val test = new StreamingRecordFormatterTest()
-    withSetUpAndTearDown(test, test.testSimpleTypes)
-    withSetUpAndTearDown(test, test.testStructInArray)
-    withSetUpAndTearDown(test, test.testStructInArrayMultiRowsAndCols)
-    withSetUpAndTearDown(test, test.testArrayInsideStruct)
-    withSetUpAndTearDown(test, test.testTimestampSchemaUnsafeRow)
-  }
-
   test("LoadDataQueryBuilderTest") {
     val test = new LoadDataQueryBuilderTest()
     withSetUpAndTearDown(test, test.testWithoutPartitions)
